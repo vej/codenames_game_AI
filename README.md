@@ -16,7 +16,7 @@ To use the notebook, edit the words for the teams to match the current board.
 ## Dimensionality Reduction for Word Group Selection
 First the dimensions are reduced from 300 to 3 in order to view the words in semantic space, which can be done using PCA or t-SNE, like this
 
-<img src="readme_contents/codenames_board_3d.gif"  width=50% />
+<img src="readme_contents/codenames_board_3d.gif"  width=100% />
 
 You can use that visualization to help identify which of your words are clustered together. For instance, in the above visualization, 'pilot', 'fighter', and 'parachute' are a cluster.
 
