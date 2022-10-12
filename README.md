@@ -2,27 +2,60 @@
 Play codenames with the computer! This code uses dimensionality reduction to visualize the similarity of the words in a codenames game, letting you decide which words to clue. 
 It then generates a clue for you. 
 
-## Data
-The data used is in ```words/freq_words.txt```. These are the 38000 most commonly used words, taken from GloVe. Each word includes its vector in 300-d space
+## The game
+Codenames is a team-based board game. The board consists of 25 words. Everyone sees all the words, but only the two spymasters (one for each team), knows which words belong to which team (8 for one team, 9 for the other, 7 neutral, and 1 bomb). A turn consists of the spymaster cluing words, followed by their teammate guessing which words the spymaster was trying to clue. The goal of the game is for the spymaster to successfully clue all the words belonging to their team before the other team successfully clues all of theirs. If a team guesses the bomb, they automatically lose.
 
-This file was created by getting the pretrained GloVe data and extracting the first 3800 words. It can be done with different amounts (i.e. 50K, etc)
+Each clue consists of a single clue word and a number indicating the number of words that clue relates to. The difficulty for the spymaster is to pick a clue word that relates more to your own team's words than to the other team's words. For instance, in the board below, the red team should be wary of giving a clue of "animal" for "cat" and "kangaroo", since "animal" may also clue "bee", "mole", or even the bomb, "calf".
+
+<img src="readme_contents/board_image.jpg"  width=50% />
+
+The task of clue generation generally has two parts-- figuring out which words to clue, and generating a clue for them that is maximally far from the non-team words. 
+
+## This project
+Deciding which words to clue can be difficult-- you want to clue as many words as possible, but increasing the number of words you clue makes clue generation more difficult. This code provides AI assistance in this task. It first shows the words on the board in semantic space to help identify a good cluster of words to clue. Using that cluster, the code then generates a list of clues. 
+
+## Data
+For the representation of the words, this project uses GloVe, which maps words onto a 300-dimensional space where distance between words is related to semantic similarity. We can then perform math on the vectors representing each word to generate clues. For instance, we can calculate the distance between two words by calculating the cosine similarity between their embeddings.
+
+The word embeddings are obtained by:
+
 ```
 wget http://nlp.stanford.edu/data/glove.42B.300d.zip
 unzip glove.42B.300d.zip
+```
+We don't need all the words here, so we can reduce the number to just the most frequent words. 38000 led to a file within file limit on github, so:
+
+```
 head -n 38000 glove.42B.300d.txt > freq_words.txt
 ```
-To use the notebook, edit the words for the teams to match the current board. 
+## Using the notebook
+
+There are two parts of the notebook that require editing based on the board. 
+1) edit the words for the teams to match the current board. 
+2) After the visualization of the words, pick which words you want to clue
+
+The rest can be run automatically.
 
 ## Dimensionality Reduction for Word Group Selection
-First the dimensions are reduced from 300 to 3 in order to view the words in semantic space, which can be done using PCA or t-SNE, like this
+As described above, the first task of the spymaster is to decide which words to clue. Trying to keep track of which of your words are similar can be difficult. Here, I used dimensionality reduction to visualize the words, which can help determine which clusters of words are similar. 
 
-<img src="readme_contents/codenames_board_3d.gif"  width=100% />
+This code allows for two potential techniques: Principal Components Analysis (PCA) is a common technique of reducing the dimensionality of data and can then let you visualize it in 2D or 3D space. t-distributed stochastic neighborhood embedding (t-SNE) is a different technique that may be better suited for representing word embeddings-- rather than trying to preserve the global structure of the data, it tries to preserve local structure of neighbors. It's also less sensitive to outliers. It's also non-deterministic so sometimes rerunning the cell is useful. 
 
-You can use that visualization to help identify which of your words are clustered together. For instance, in the above visualization, 'pilot', 'fighter', and 'parachute' are a cluster.
+To demonstrate what this does, here is an "easy" board where the words for the different teams happen to be semantically distinct (one team's words relate to royalty, the other team's words relate to coding):
+<img src="readme_contents/codenames_board_3d_easy.gif"  width=100% />
+
+In reality we are never this lucky. For instance, the board shown at the top of this Readme doc is represented by the following:
+
+<img src="readme_contents/codenames_board_3d_bolt.gif"  width=100% />
+
+Nonetheless, this visualization can help identify good clusters of words.  For instance, the above visualization shows that "bolt", and "sling" are similar, which may not be immediately obvious. 
 
 ## Clue Generation
-Once you decide on a cluster of words to clue, the notebook will produce a clue that minimizes distance to your words and maximizes distance to the other words. 
+Once you decide on a cluster of words to clue, the notebook will produce a clue. A potential algorithm for this is provided by  https://jsomers.net/glove-codenames/ and is adapted here. It generates a list of words that minimizes distance to your team's words and maximizes distance to the other words. 
 
-For instance, minimizing distance to pilot, fighter, and parachute, and maximizing distance to all non-good words on the board results in word recommendations like 'squadron', 'maneuvers',  and 'aircraft'. 
+For instance, minimizing distance to "bolt" and "sling", and maximizing distance to all non-good words on the board results in word recommendations like "recoil" and "harness". 
 
-These clues will then be replotted in 3d space with the words on the board, so you can see which of the other teams words are worth being concerned about. 
+These clues will then be replotted in 3d space with the words on the board, so you can see which of the other teams words are worth being concerned about.
+
+<img src="readme_contents/codenames_board_3d_bolt_clues.gif"  width=100% />
+
