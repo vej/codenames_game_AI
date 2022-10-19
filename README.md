@@ -58,6 +58,12 @@ In reality we are never this lucky. For instance, the board shown at the top of 
 
 Nonetheless, this visualization can help identify good clusters of words.  For instance, the above visualization shows that "bolt", and "sling" are similar, which may not be immediately obvious. 
 
+## Clustering Analysis for Word Group Selection
+
+We can also use clustering techniques to identify the clusters. I did this in this code with DBSCAN, which finds core, highly dense samples and then expands the clusters around them to the nearest neighbors. For instance, this plots the board where color determined by the cluster. You can see that DBSCAN picks up the cluster we could eyeball before, "sling" and "bolt":
+
+<img src="readme_contents/codenames_board_3d_clusters.gif"  width=100% />
+
 ## Clue Generation
 Once you decide on a cluster of words to clue, the notebook will produce a clue. A potential algorithm for this is provided by  https://jsomers.net/glove-codenames/ and is adapted here. It generates a list of words that minimizes distance to your team's words and maximizes distance to the other words. It does this first by finding the 250 words that maximize the the distance to the bad words, and minimize the distance to the good words. this is insufficient, though, since a candidate clue can score well if it's very close to one or two of your words but far from the other. So, we want to sort the 250 candidate clues according to those that maximize the minimum distance to the good words, and minimize the max distance to the bad words. 
 
